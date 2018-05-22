@@ -1,0 +1,29 @@
+{
+    "name": "rottriges/yii2-gantt",
+    "description": "Ganttchart for project-management ",
+    "keywords": [
+        "yii2",
+        "extension",
+        "gantt"
+    ],
+    "homepage": "https://github.com/rottriges/yii2-gantt",
+    "type": "yii2-extension",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Markus Rotter",
+            "email": "rottriges@gmail.com",
+            "homepage": "https://github.com/rottriges/"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "rottriges\\gantt\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.0.x-dev"
+        }
+    }
+}
