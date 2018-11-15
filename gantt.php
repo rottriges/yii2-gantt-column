@@ -3,7 +3,7 @@
  * @package   yii2-gantt
  * @author    Markus Rotter <rottriges@gmail.com>
  * @copyright Copyright &copy; Markus Rotter,  2018 - 2019
- * @version   0.1.0
+ * @version   0.0.2
  */
 
 
@@ -26,7 +26,7 @@ class Gantt extends Widget
 
     public function run()
     {
-        return Html::encode($this->message);
+        return Html::tag('div', Html::encode($this->message),['class'=>'bg-info']);
     }
 }
 ?>
