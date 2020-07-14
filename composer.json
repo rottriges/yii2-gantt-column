@@ -20,5 +20,10 @@
         "psr-4": {
             "rottriges\\gantt\\": ""
         }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.0.x-dev"
+        }
     }
 }
