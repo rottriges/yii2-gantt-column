@@ -26,7 +26,9 @@ class Gantt extends Widget
 
     public function run()
     {
-        return Html::tag('div', Html::encode($this->message),['class'=>'bg-info']);
+        $view = $this->getView();
+        GanttViewAsset::register($view);
+        return Html::tag('div', Html::encode($this->message),['class'=>'gantt-container']);
     }
 }
 ?>
