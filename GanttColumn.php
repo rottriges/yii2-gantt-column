@@ -69,7 +69,7 @@ class GanttColumn extends DataColumn
     protected function renderHeaderCellContent()
     {
         // return trim($this->header) !== '' ? $this->header : $this->getHeaderCellLabel();
-        return '<div class="bg-danger">Year</div><div class="bg-info">Month</div>';
+        return '<div class="bg-danger">Year</div><div class="bg-warning">3. Element</div><div class="bg-info">Month</div>';
     }
 
     /**
@@ -112,18 +112,11 @@ class GanttColumn extends DataColumn
           throw new InvalidConfigException("`startAttribute` and `endAttribute` not defined");
         }
 
-        // TODO: function getDateAttribute and validate date format
-        $this->_startDate = $this->ganttOptions['startAttribute'];
-        $this->_endDate = $this->ganttOptions['startAttribute'];
-
-        foreach ([$this->_startDate, $this->_endDate] as  $dateParam) {
-          $date = \DateTime::createFromFormat($this->gantDateFormat, $dateParam);
-          if ( $date == false || !(date_format($date,$this->gantDateFormat) == $dateParam) ){
-            throw new InvalidConfigException("wrong format for $dateParam");
-          }
+        $this->_startDate = $this->getStartAttributeValue($model, $key, $index);
+        $this->_endDate = $this->getEndAttributeValue($model, $key, $index);
+        if ($this->_startDate !== null && $this->_endDate !== null) {
+          return $this->_startDate . ' - ' . $this->_endDate;
         }
-
-
 
         return $this->grid->emptyCell;
     }
@@ -138,6 +131,43 @@ class GanttColumn extends DataColumn
           </div>
         </div>';
         return $progressBar;
+    }
+
+    protected function getStartAttributeValue($model, $key, $index)
+    {
+        $attribute = $this->ganttOptions['startAttribute'];
+        return $this->getDateAttributeValue($model, $key, $index, $attribute );
+    }
+
+    protected function getEndAttributeValue($model, $key, $index)
+    {
+        $attribute = $this->ganttOptions['endAttribute'];
+        return $this->getDateAttributeValue($model, $key, $index, $attribute );
+    }
+
+    protected function getDateAttributeValue($model, $key, $index, $attribute)
+    {
+      if ( $attribute !== null && is_string($attribute) ) {
+        $dateAttribute = ArrayHelper::getValue($model, $attribute);
+        $dateValue = explode(' ', $dateAttribute)[0];
+        if ( !$this->validateGanttDate($dateValue) ){
+          throw new InvalidConfigException(
+            "date format $attribute not correct; right format = $this->gantDateFormat"
+          );
+        }
+        return $dateValue;
+      }
+      return null;
+    }
+
+    protected function validateGanttDate($dateValue)
+    {
+        $date = \DateTime::createFromFormat($this->gantDateFormat, $dateValue);
+
+        if ( $date == false || !(date_format($date,$this->gantDateFormat) == $dateValue) ){
+          return false;
+        }
+        return true;
     }
 
 
