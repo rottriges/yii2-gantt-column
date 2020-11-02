@@ -72,7 +72,7 @@ class GanttColumn extends DataColumn
       /**
        * @var string the size of one unit in px
        */
-      public $unitSize = 14;
+      public $unitSize = 17;
 
       /**
        * @var string the amount of all units

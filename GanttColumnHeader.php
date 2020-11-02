@@ -28,27 +28,44 @@ class GanttColumnHeader extends \yii\base\Component
   protected function getYearRow()
   {
     $row = '';
-    foreach ($this->years as $key => $value) {
-      $width = $this->getColWidth($value);
-      $bgCol = $this->getColBgColor($key);
-      $row .= '<div
-      class="header-col ' . $bgCol . '"
-      style="width: ' . $width . ';">' .
-      $key . '</div>';
+    foreach ($this->years as $year => $units) {
+      $row .= $this->generateRow( $units, $year, 'bg-info', 'bg-danger');
     }
-    $row .= '<div class="last-header-col"></div>';
+    $row .= Html::tag('div', '', ['class' => 'last-header-col' ]);
     return $row;
   }
 
   protected function getMonthRow()
   {
-    return '<div class="header-col bg-warning">Month</div>';
+    $row = '';
+    foreach ($this->months as $yearMonth => $units) {
+      // explode 'YYYY-mm' to 'mm'
+      $value = explode('-', $yearMonth)[1];
+      $row .= $this->generateRow( $units, $value, 'bg-success', 'bg-warning');
+    }
+    $row .= Html::tag('div', '', ['class' => 'last-header-col' ]);
+    return $row;
   }
 
   protected function getWeekRow()
   {
-    return '<div class="header-col bg-info">Week</div>';
+    $row = '';
+    foreach ($this->weeks as $week) {
+      $row .= $this->generateRow( 1, $week, 'bg-grey', 'bg-default');
+    }
+    $row .= Html::tag('div', '', ['class' => 'last-header-col' ]);
+    return $row;
   }
+
+  private function generateRow($widthVal, $value, $bgEven, $bgOdd)
+  {
+    $width = $this->getColWidth($widthVal);
+    $bgCol = $this->getColBgColor($value, $bgEven, $bgOdd);
+    $options['class'] = 'header-col ' . $bgCol;
+    $options['style'] = 'width: ' . $width;
+    return Html::tag('div', $value, $options);
+  }
+
 
   private function getColWidth($val)
   {
@@ -57,13 +74,13 @@ class GanttColumnHeader extends \yii\base\Component
     return $colWidth;
   }
 
-  private function getColBgColor($val)
+  private function getColBgColor($val, $bgEven, $bgOdd)
   {
     // even $val
-    if ($val % 2) return 'bg-info';
+    if ($val % 2) return $bgEven;
 
     // odd $val
-    return 'bg-danger';
+    return $bgOdd;
   }
 
 }
