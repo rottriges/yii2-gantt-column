@@ -16,7 +16,7 @@ class GanttViewAsset extends AssetBundle
         'js/ganttView.js',
     ];
     public $css = [
-        'css/ganttView.css',
+        'css/ganttColumn.css',
     ];
     public $depends = [
         'yii\web\YiiAsset',

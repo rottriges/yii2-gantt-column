@@ -17,7 +17,7 @@ use yii\grid\DataColumn;
 
 class GanttColumn extends DataColumn
 {
-  public $header = 'GanttCell';
+  private $_header;
 
   /**
    * @var string the format setting for the gantt cell musst always be html.
@@ -54,10 +54,54 @@ class GanttColumn extends DataColumn
       private $_endDate;
 
       /**
-       * @var string the date format for endDate for ther processbar
+       * @var string the dateRangeStart
        */
-      public $gantDateFormat = 'Y-m-d';
+       private $_dateRangeStart;
 
+       /**
+        * @var string the dateRangeEnd
+        */
+        private $_dateRangeEnd;
+
+      /**
+       * @var string the date format
+       */
+      public $ganttDateFormat = 'Y-m-d';
+
+      /**
+       * @var string the size of one unit in px
+       */
+      public $unitSize = 14;
+
+    public function init()
+    {
+      parent::init();
+
+      $this->_header = new GanttColumnHeader();
+      $this->_header->unitSize = $this->unitSize;
+
+      if (!is_array($this->ganttOptions)) {
+        throw new InvalidConfigException("`ganttOptions` is not an array");
+      }
+      if (!isset($this->ganttOptions['startAttribute']) || !isset($this->ganttOptions['endAttribute'])) {
+        throw new InvalidConfigException("`startAttribute` and/or `endAttribute` not defined");
+      }
+      if (!isset($this->ganttOptions['dateRangeStart']) || !isset($this->ganttOptions['dateRangeStart'])) {
+        throw new InvalidConfigException("`dateRangeStart` and/or `dateRangeStart` not defined");
+      }
+
+      $this->_dateRangeStart = $this->getDateRange($this->ganttOptions['dateRangeStart']);
+      $this->_dateRangeEnd = $this->getDateRange($this->ganttOptions['dateRangeEnd']);
+
+      $this->getUnits();
+    }
+
+    public function run()
+    {
+        $view = $this->getView();
+        GanttViewAsset::register($view);
+        parent::run();
+    }
 
 
   /**
@@ -68,8 +112,7 @@ class GanttColumn extends DataColumn
      */
     protected function renderHeaderCellContent()
     {
-        // return trim($this->header) !== '' ? $this->header : $this->getHeaderCellLabel();
-        return '<div class="bg-danger">Year</div><div class="bg-warning">3. Element</div><div class="bg-info">Month</div>';
+        return $this->_header->headerRow;
     }
 
     /**
@@ -105,17 +148,12 @@ class GanttColumn extends DataColumn
         if (!empty($this->ganttOptions) && $this->ganttOptions instanceof Closure) {
             $this->ganttOptions = call_user_func($this->ganttOptions, $model, $key, $index, $this);
         }
-        if (!is_array($this->ganttOptions)) {
-          throw new InvalidConfigException("`ganttOptions` is not an array");
-        }
-        if (!isset($this->ganttOptions['startAttribute']) || !isset($this->ganttOptions['endAttribute'])) {
-          throw new InvalidConfigException("`startAttribute` and `endAttribute` not defined");
-        }
 
         $this->_startDate = $this->getStartAttributeValue($model, $key, $index);
         $this->_endDate = $this->getEndAttributeValue($model, $key, $index);
+
         if ($this->_startDate !== null && $this->_endDate !== null) {
-          return $this->_startDate . ' - ' . $this->_endDate;
+          return 'Test';
         }
 
         return $this->grid->emptyCell;
@@ -145,6 +183,25 @@ class GanttColumn extends DataColumn
         return $this->getDateAttributeValue($model, $key, $index, $attribute );
     }
 
+    protected function getDateRange($rangeValue)
+    {
+        // Check if value is _integer (can be negativ or pos)
+        if(is_integer($rangeValue)){
+          // + prefix for positiv numebers for additions
+          $val = sprintf("%+d",$rangeValue);
+          return date('Y-m-d', strtotime(date('Y-m-d') . $val .' weeks'));
+        }
+        // check if value is correct formated date
+        if($this->validateGanttDate($rangeValue)){
+          return $rangeValue;
+        }
+        // if both checks false throw exception
+        throw new InvalidConfigException(
+          "dateRange must be an integer
+          or a date formatedd as ($this->ganttDateFormat)"
+        );
+    }
+
     protected function getDateAttributeValue($model, $key, $index, $attribute)
     {
       if ( $attribute !== null && is_string($attribute) ) {
@@ -152,7 +209,7 @@ class GanttColumn extends DataColumn
         $dateValue = explode(' ', $dateAttribute)[0];
         if ( !$this->validateGanttDate($dateValue) ){
           throw new InvalidConfigException(
-            "date format $attribute not correct; right format = $this->gantDateFormat"
+            "date format $attribute not correct; right format = $this->ganttDateFormat"
           );
         }
         return $dateValue;
@@ -162,12 +219,63 @@ class GanttColumn extends DataColumn
 
     protected function validateGanttDate($dateValue)
     {
-        $date = \DateTime::createFromFormat($this->gantDateFormat, $dateValue);
+        $date = \DateTime::createFromFormat($this->ganttDateFormat, $dateValue);
 
-        if ( $date == false || !(date_format($date,$this->gantDateFormat) == $dateValue) ){
+        if ( $date == false || !(date_format($date,$this->ganttDateFormat) == $dateValue) ){
           return false;
         }
         return true;
+    }
+
+    /**
+     * column-units for header and content
+     *
+     * period between dateRangeStart and dateRangeEnd will be devided in single
+     * units. (defaul time unit will be weeks)
+     * The method determine the total amount of units the amount of units per
+     * month and the units per year.
+     *
+     * @param type var Description
+     * @return return units
+     */
+    protected function getUnits()
+    {
+        $startDate =  new \DateTime($this->_dateRangeStart);
+        $endDate =  new \DateTime($this->_dateRangeEnd);
+        // End Range has to be at least 1 second greater than
+        // start range to count as a full day
+        $endDate->modify('+1 second');
+        $interval = 'P1W';
+
+        $period = new \DatePeriod(
+          $startDate,
+          new \DateInterval($interval),
+          $endDate
+        );
+
+        $year = 0;
+        $month = 0;
+        $monthIndex = 0;
+        $weekIndex = 0;
+        foreach ($period as $key => $value) {
+          $y = $value->format('Y');
+          $m = $value->format('m');
+          $w = $value->format('W');
+          if ($year != $y){
+            $year = $y;
+            $this->_header->years[$y] = 0;
+          }
+          if ($month != $m){
+            $month = $m;
+            $monthIndex = $year . '-' . $month;
+            $this->_header->months[$monthIndex] = 0;
+          }
+
+          $this->_header->years[$year]++;
+          $this->_header->months[$monthIndex]++;
+          $this->_header->weeks[] = $w;
+
+        }
     }
 
 
