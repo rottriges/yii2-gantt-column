@@ -9,6 +9,7 @@
 
 namespace rottriges\gantt;
 
+use Yii;
 use Closure;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
@@ -73,6 +74,11 @@ class GanttColumn extends DataColumn
        */
       public $unitSize = 14;
 
+      /**
+       * @var string the amount of all units
+       */
+      public $unitSum;
+
     public function init()
     {
       parent::init();
@@ -94,14 +100,13 @@ class GanttColumn extends DataColumn
       $this->_dateRangeEnd = $this->getDateRange($this->ganttOptions['dateRangeEnd']);
 
       $this->getUnits();
+      $this->unitSum = count($this->_header->weeks);
+
+      $view = Yii::$app->getView();
+      GanttViewAsset::register($view);
+
     }
 
-    public function run()
-    {
-        $view = $this->getView();
-        GanttViewAsset::register($view);
-        parent::run();
-    }
 
 
   /**
@@ -129,9 +134,9 @@ class GanttColumn extends DataColumn
         } else {
             $options = $this->contentOptions;
         }
-        if (trim($this->width) != '') {
-            Html::addCssStyle($options, "width:{$this->width};");
-        }
+        $this->width = ($this->unitSum * $this->unitSize + 17) . 'px';
+        Html::addCssStyle($options, "width:{$this->width};");
+
         // return Html::tag('td', $this->progressBar, $options);
         return Html::tag('td', $this->renderDataCellContent($model, $key, $index), $options);
     }
@@ -274,8 +279,8 @@ class GanttColumn extends DataColumn
           $this->_header->years[$year]++;
           $this->_header->months[$monthIndex]++;
           $this->_header->weeks[] = $w;
-
         }
+
     }
 
 

@@ -1,0 +1,7 @@
+.header-col{
+  float: left;
+  text-align: center;
+}
+.last-header-col{
+  clear:both;
+}

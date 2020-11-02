@@ -15,7 +15,7 @@ use yii\helpers\Html;
 class GanttColumnHeader extends \yii\base\Component
 {
   private $_headerRow;
-  public $unitSize;
+  public $unitSize = 14;
   public $years = [];
   public $months = [];
   public $weeks = [];
@@ -30,19 +30,24 @@ class GanttColumnHeader extends \yii\base\Component
     $row = '';
     foreach ($this->years as $key => $value) {
       $width = $this->getColWidth($value);
-      $row .= '<div class="header-col" style="width: ' . $width . ';">' . $key . '</div>';
+      $bgCol = $this->getColBgColor($key);
+      $row .= '<div
+      class="header-col ' . $bgCol . '"
+      style="width: ' . $width . ';">' .
+      $key . '</div>';
     }
+    $row .= '<div class="last-header-col"></div>';
     return $row;
   }
 
   protected function getMonthRow()
   {
-    return '<div class="bg-warning">Month</div>';
+    return '<div class="header-col bg-warning">Month</div>';
   }
 
   protected function getWeekRow()
   {
-    return '<div class="bg-info">Week</div>';
+    return '<div class="header-col bg-info">Week</div>';
   }
 
   private function getColWidth($val)
@@ -50,6 +55,15 @@ class GanttColumnHeader extends \yii\base\Component
     $width =  $val * $this->unitSize;
     $colWidth = $width . 'px';
     return $colWidth;
+  }
+
+  private function getColBgColor($val)
+  {
+    // even $val
+    if ($val % 2) return 'bg-info';
+
+    // odd $val
+    return 'bg-danger';
   }
 
 }
