@@ -47,44 +47,65 @@ class GanttColumn extends DataColumn
     /**
      * @var string the startDate for ther processbar
      */
-     private $_startDate;
+    private $_startDate;
 
      /**
       * @var string the endDate for ther processbar
       */
-      private $_endDate;
+    private $_endDate;
 
-      /**
-       * @var string the dateRangeStart
-       */
-       private $_dateRangeStart;
+    /**
+     * @var string the dateRangeStart
+     */
+    private $_dateRangeStart;
 
-       /**
-        * @var string the dateRangeEnd
-        */
-        private $_dateRangeEnd;
+     /**
+      * @var string the dateRangeEnd
+      */
+    private $_dateRangeEnd;
 
-      /**
-       * @var string the date format
-       */
-      public $ganttDateFormat = 'Y-m-d';
+    /**
+     * @var string the date format
+     */
+    public $ganttDateFormat = 'Y-m-d';
 
-      /**
-       * @var string the size of one unit in px
-       */
-      public $unitSize = 17;
+    /**
+     * @var string the size of one unit in px
+     */
+    public $unitSize = 17;
 
-      /**
-       * @var string the amount of all units
-       */
-      public $unitSum;
+    /**
+     * @var string the amount of all units
+     */
+    public $unitSum;
+
+    /**
+     * startGap
+     *
+     * size of the gap (weeks * units) if the startDate is greater than the dateRangeStart
+     *
+     * @var int size of gap
+     */
+    private $_startGap;
+
+    /**
+     * progressLength
+     *
+     * size of the progress bar in weeks * units
+     *
+     * @var int size of gap
+     */
+    private $_progressLength;
 
     public function init()
     {
       parent::init();
 
+      $this->registerTranslations();
+
       $this->_header = new GanttColumnHeader();
       $this->_header->unitSize = $this->unitSize;
+      GanttColumnHeader::registerTranslations();
 
       if (!is_array($this->ganttOptions)) {
         throw new InvalidConfigException("`ganttOptions` is not an array");
@@ -106,6 +127,22 @@ class GanttColumn extends DataColumn
       GanttViewAsset::register($view);
 
     }
+
+    public function registerTranslations()
+    {
+        $i18n = Yii::$app->i18n;
+        $i18n->translations['vendor/rottriges/yii2-gantt/*'] = [
+            'class' => 'yii\i18n\PhpMessageSource',
+            'sourceLanguage' => 'en-US',
+            'basePath' => '@app/vendor/rottriges/yii2-gantt/messages',
+
+        ];
+    }
+
+    public static function t($category = 'ganttColumn', $message, $params = [], $language = null)
+   {
+       return Yii::t('vendor/rottriges/yii2-gantt/' . $category, $message, $params, $language);
+   }
 
 
 
@@ -157,23 +194,93 @@ class GanttColumn extends DataColumn
         $this->_startDate = $this->getStartAttributeValue($model, $key, $index);
         $this->_endDate = $this->getEndAttributeValue($model, $key, $index);
 
-        if ($this->_startDate !== null && $this->_endDate !== null) {
-          return 'Test';
+        if ($this->_startDate !== null && $this->_endDate !== null && $this->checkIfDatesInRange()) {
+          return $this->getProgressBar();
         }
 
         return $this->grid->emptyCell;
     }
 
+    protected function setStartAndEndDate($model, $key, $index)
+    {
+
+    }
+
+    /**
+     *
+     * @return int gap size in unit if startDate is greater than date range start
+     */
+    protected function getStartGap()
+    {
+      if ($this->_startDate <= $this->_dateRangeStart) return 0;
+      $diffInWeeks = $this->getDiffInWeeks($this->_startDate, $this->_dateRangeStart );
+      return $this->_startGap = $diffInWeeks * $this->unitSize;
+    }
+
+
+    protected function getProgressLength()
+    {
+      $start = $this->getProgressStart();
+      $end = $this->getProgressEnd();
+      $diffInWeeks = $this->getDiffInWeeks($start, $end );
+
+      return $this->_progressLength = $diffInWeeks * $this->unitSize;
+    }
+
+    protected function getProgressStart()
+    {
+      if ( $this->_startDate >= $this->_dateRangeStart ){
+        return $this->_startDate;
+      } else {
+        return $this->_dateRangeStart;
+      }
+    }
+
+    protected function getProgressEnd()
+    {
+      if ( $this->_endDate <= $this->_dateRangeEnd ){
+        return $this->_endDate;
+      } else {
+        return $this->_dateRangeEnd;
+      }
+    }
+
 
     protected function getProgressBar()
     {
-      $progressBar = '
-        <div class="progress">
-          <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
-            60%
-          </div>
-        </div>';
-        return $progressBar;
+
+      $progressBar =  Yii::createObject([
+            'class' => 'rottriges\gantt\GanttProgressBar',
+            'startGap' => $this->startGap,
+            'length' => $this->progressLength
+        ]);
+        return $progressBar->getProgressBar();
+    }
+
+    protected function checkIfDatesInRange()
+    {
+      if (
+        $this->_startDate >= $this->_dateRangeStart &&
+        $this->_endDate <= $this->_dateRangeEnd
+      ){
+        return true;
+      }
+
+      if (
+        $this->_startDate <= $this->_dateRangeStart &&
+        $this->_endDate >= $this->_dateRangeEnd
+      ){
+        return true;
+      }
+
+      if (
+        $this->_startDate <= $this->_dateRangeEnd &&
+        $this->_endDate >= $this->_dateRangeStart
+      ){
+        return true;
+      }
+
+      return false;
     }
 
     protected function getStartAttributeValue($model, $key, $index)
@@ -283,7 +390,32 @@ class GanttColumn extends DataColumn
 
     }
 
+    /**
+     * Compares two dates and returns the diff in weeks
+     *
+     * gantt progress bar compares weeks irrelevant if one day match the week;
+     * due to comparsions within year changes we have to calculate with date->diff;
+     * to avoid roundin problems we use always first day of week for calculations;
+     *
+     * @param type var Description
+     * @return return type
+     */
+    private function getDiffInWeeks($date1, $date2)
+    {
+        $firstDayofWeek1 = $this->getFirstDayOfWeek($date1);
+        $firstDayofWeek2 = $this->getFirstDayOfWeek($date2);
+        $d1 =  new \DateTime($firstDayofWeek1);
+        $d2 =  new \DateTime($firstDayofWeek2);
+        $diffInDays = $d1->diff($d2)->days;
+        $diffInWeeks = $diffInDays / 7;
 
+        return floor($diffInWeeks) +1; // +1 because the current week hast to be added
+    }
+
+    private function getFirstDayOfWeek($date)
+    {
+      return date("Y-m-d", strtotime('monday this week', strtotime($date)));
+    }
 
 
 }

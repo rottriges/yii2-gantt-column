@@ -6,9 +6,24 @@
   clear:both;
 }
 
-.bg-grey{
-  background-color: #f3f3f3;
+.week{
   font-weight: normal;
   font-size: 10px;
-  height: 18px;
+  height: 14px;
+}
+
+.bg-week-od{
+  background-color: #f3f3f3;
+}
+
+.bg-week-even{
+  background-color: #fff;
+}
+
+.progress-bar-empty{
+  background-color: #fff !important;
+}
+
+.ro-progress.progress{
+  margin-bottom: 0px !important;
 }

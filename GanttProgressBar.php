@@ -15,18 +15,53 @@ use yii\helpers\Html;
 class GanttProgressBar extends \yii\base\Component
 {
 
+  public $startGap = 0;
+  public $length = 0;
 
   public function getProgressBar()
   {
-    return Progress::widget([
-      'percent' => 65,
-      'barOptions' => ['class' => 'progress-bar-danger' ]
-    ]);
-    // return   '<div class="progress-bar-danger progress-bar" role="progressbar"
-    //     aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"
-    //     style="width:65%">
-    //     <span class="sr-only">65% Complete</span></div>';
+    if ($this->startGap > 0){
+      return $this->getProgressBarWithStartGap();
+    }
+    return $this->getProgressBarWithoutStartGap();
   }
+
+  protected function getProgressBarWithoutStartGap()
+  {
+    return Progress::widget([
+        'options' => ['class' => 'ro-progress' ],
+        'barOptions' => [
+          'class' => 'progress-bar-danger',
+          'style' => 'width:' . $this->length . 'px;'
+        ]
+    ]);
+  }
+
+  protected function getProgressBarWithStartGap()
+  {
+    return Progress::widget([
+      'options' => ['class' => 'ro-progress' ],
+      'bars' => [
+          [
+            'percent' => 0,
+            'options' => [
+              'class' => 'progress-bar-empty',
+              'style' => 'width:' . $this->startGap . 'px;'
+              ]
+          ],
+          [
+            'percent' => 0,
+            'options' => [
+              'class' => 'progress-bar-success',
+              'style' => 'width:' . $this->length . 'px;'
+            ]
+          ]
+      ]
+    ]);
+  }
+
+
+
 
 
 }
