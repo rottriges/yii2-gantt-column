@@ -16,6 +16,7 @@
             "homepage": "https://github.com/rottriges/"
         }
     ],
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "rottriges\\ganttcolumn\\": ""
