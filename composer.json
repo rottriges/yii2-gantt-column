@@ -1,12 +1,12 @@
 {
-    "name": "rottriges/yii2-gantt",
-    "description": "Ganttchart for project-management ",
+    "name": "rottriges/yii2-gantt-column",
+    "description": "Ganttchart-Column for yii2 grid for project-management ",
     "keywords": [
         "yii2",
         "extension",
         "gantt"
     ],
-    "homepage": "https://github.com/rottriges/yii2-gantt",
+    "homepage": "https://github.com/rottriges/yii2-gantt-column",
     "type": "yii2-extension",
     "license": "BSD-3-Clause",
     "authors": [
@@ -18,12 +18,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "rottriges\\gantt\\": ""
+            "rottriges\\ganttcolumn\\": ""
         }
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.0.x-dev"
+            "dev-master": "1.0.x-dev"
         }
     }
 }

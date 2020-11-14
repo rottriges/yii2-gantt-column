@@ -7,7 +7,7 @@
  */
 
 
-namespace rottriges\gantt;
+namespace rottriges\ganttcolumn;
 
 use Yii;
 use Closure;

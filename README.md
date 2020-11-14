@@ -1,8 +1,8 @@
-# yii2-gantt
+# yii2-gantt-column
 ============
 
 [![Total Downloads](https://poser.pugx.org/rottriges/yii2-gantt/downloads)](https://packagist.org/packages/rottriges/yii2-gantt)
 [![Latest Unstable Version](https://poser.pugx.org/rottriges/yii2-gantt/v/unstable)](https://packagist.org/packages/rottriges/yii2-gantt)
 [![License](https://poser.pugx.org/rottriges/yii2-gantt/license)](https://packagist.org/packages/rottriges/yii2-gantt)
 
-Gantt widget for projects will generate a gantt view list from dataProvider or an array. Minimum  needs is a description, start- or end-date and a duration.
+Gantt-Column widget for yii2 grid extends the data column. It could be used for project management and planing.

@@ -7,7 +7,7 @@
  */
 
 
-namespace rottriges\gantt;
+namespace rottriges\ganttcolumn;
 
 use yii\bootstrap\Progress;
 use yii\helpers\Html;
