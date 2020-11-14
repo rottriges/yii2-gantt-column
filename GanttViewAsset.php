@@ -1,6 +1,6 @@
 <?php
 
-namespace rottriges\gantt;
+namespace rottriges\ganttcolumn;
 
 use yii\web\AssetBundle;
 
