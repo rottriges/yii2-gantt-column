@@ -17,6 +17,7 @@ class GanttProgressBar extends \yii\base\Component
 
   public $startGap = 0;
   public $length = 0;
+  public $progressBarType = 'primary';
 
   public function getProgressBar()
   {
@@ -31,7 +32,7 @@ class GanttProgressBar extends \yii\base\Component
     return Progress::widget([
         'options' => ['class' => 'ro-progress' ],
         'barOptions' => [
-          'class' => 'progress-bar-danger',
+          'class' => 'progress-bar-' . $this->progressBarType,
           'style' => 'width:' . $this->length . 'px;'
         ]
     ]);
@@ -52,7 +53,7 @@ class GanttProgressBar extends \yii\base\Component
           [
             'percent' => 0,
             'options' => [
-              'class' => 'progress-bar-success',
+              'class' => 'progress-bar-' . $this->progressBarType,
               'style' => 'width:' . $this->length . 'px;'
             ]
           ]

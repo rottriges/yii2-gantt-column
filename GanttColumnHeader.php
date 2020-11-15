@@ -55,25 +55,6 @@ class GanttColumnHeader extends \yii\base\Component
       ],
   ];
 
-  public function init()
-  {
-    return parent::init();
-  }
-
-  public static function registerTranslations()
-  {
-      $i18n = Yii::$app->i18n;
-      $i18n->translations['ganttColumn'] = [
-          'class' => 'yii\i18n\PhpMessageSource',
-          'sourceLanguage' => 'en-US',
-          'basePath' => __DIR__.'/messages',
-      ];
-  }
-
-  public static function t($category, $message, $params = [], $language = null)
-  {
-    return Yii::t( $category, $message, $params, $language);
-  }
 
   public function getHeaderRow()
   {
@@ -107,7 +88,7 @@ class GanttColumnHeader extends \yii\base\Component
       // explode 'YYYY-mm' to 'mm'
       $value = intval(explode('-', $yearMonth)[1]);
       $value = self::$_months['monthsShort'][$value];
-      $value = self::t('ganttColumn', $value);
+      $value = GanttColumn::t('ganttColumn', $value);
       $row .= $this->generateRow( $units, $value, $bgColor);
       $i++;
     }

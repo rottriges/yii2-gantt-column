@@ -97,6 +97,12 @@ class GanttColumn extends DataColumn
      */
     private $_progressLength;
 
+    /**
+    * progress typ (primary, danger, success, warnin or info)
+    */
+    private $_progressType;
+
+
     public function init()
     {
       parent::init();
@@ -105,7 +111,7 @@ class GanttColumn extends DataColumn
 
       $this->_header = new GanttColumnHeader();
       $this->_header->unitSize = $this->unitSize;
-      GanttColumnHeader::registerTranslations();
+      self::registerTranslations();
 
       if (!is_array($this->ganttOptions)) {
         throw new InvalidConfigException("`ganttOptions` is not an array");
@@ -128,21 +134,20 @@ class GanttColumn extends DataColumn
 
     }
 
-    public function registerTranslations()
+    public static function registerTranslations()
     {
         $i18n = Yii::$app->i18n;
-        $i18n->translations['vendor/rottriges/yii2-gantt/*'] = [
+        $i18n->translations['ganttColumn'] = [
             'class' => 'yii\i18n\PhpMessageSource',
             'sourceLanguage' => 'en-US',
-            'basePath' => '@app/vendor/rottriges/yii2-gantt/messages',
-
+            'basePath' => __DIR__.'/messages',
         ];
     }
 
-    public static function t($category = 'ganttColumn', $message, $params = [], $language = null)
-   {
-       return Yii::t('vendor/rottriges/yii2-gantt/' . $category, $message, $params, $language);
-   }
+    public static function t($category, $message, $params = [], $language = null)
+    {
+      return Yii::t( $category, $message, $params, $language);
+    }
 
 
 
@@ -187,12 +192,17 @@ class GanttColumn extends DataColumn
      */
     protected function renderDataCellContent($model, $key, $index)
     {
-        if (!empty($this->ganttOptions) && $this->ganttOptions instanceof Closure) {
-            $this->ganttOptions = call_user_func($this->ganttOptions, $model, $key, $index, $this);
-        }
 
         $this->_startDate = $this->getStartAttributeValue($model, $key, $index);
         $this->_endDate = $this->getEndAttributeValue($model, $key, $index);
+        if (
+          !empty($this->ganttOptions['progressBarType']) &&
+          $this->ganttOptions['progressBarType'] instanceof Closure
+        ) {
+            $this->_progressType = call_user_func($this->ganttOptions['progressBarType'], $model, $key, $index, $this);
+        } else {
+          $this->_progressType = $this->ganttOptions['progressBarType'];
+        }
 
         if ($this->_startDate !== null && $this->_endDate !== null && $this->checkIfDatesInRange()) {
           return $this->getProgressBar();
@@ -214,6 +224,7 @@ class GanttColumn extends DataColumn
     {
       if ($this->_startDate <= $this->_dateRangeStart) return 0;
       $diffInWeeks = $this->getDiffInWeeks($this->_startDate, $this->_dateRangeStart );
+      if ($diffInWeeks === 0) return 1;
       return $this->_startGap = $diffInWeeks * $this->unitSize;
     }
 
@@ -222,7 +233,7 @@ class GanttColumn extends DataColumn
     {
       $start = $this->getProgressStart();
       $end = $this->getProgressEnd();
-      $diffInWeeks = $this->getDiffInWeeks($start, $end );
+      $diffInWeeks = $this->getDiffInWeeks($start, $end ) + 1;// +1 because the current week hast to be added
 
       return $this->_progressLength = $diffInWeeks * $this->unitSize;
     }
@@ -246,13 +257,15 @@ class GanttColumn extends DataColumn
     }
 
 
+
     protected function getProgressBar()
     {
 
       $progressBar =  Yii::createObject([
-            'class' => 'rottriges\gantt\GanttProgressBar',
+            'class' => 'rottriges\ganttcolumn\GanttProgressBar',
             'startGap' => $this->startGap,
-            'length' => $this->progressLength
+            'length' => $this->progressLength,
+            'progressBarType' => $this->_progressType,
         ]);
         return $progressBar->getProgressBar();
     }
@@ -409,7 +422,7 @@ class GanttColumn extends DataColumn
         $diffInDays = $d1->diff($d2)->days;
         $diffInWeeks = $diffInDays / 7;
 
-        return floor($diffInWeeks) +1; // +1 because the current week hast to be added
+        return floor($diffInWeeks);
     }
 
     private function getFirstDayOfWeek($date)
