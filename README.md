@@ -32,6 +32,48 @@ or  you add the following to to the ```require``` section of your `composer.json
 ```
 
 ## Usage
+
+#### Model with dataProvider:
+```php
+namespace app\models;
+
+use yii\data\ArrayDataProvider;
+
+class GanttTest extends \yii\base\Model
+{
+  public function getDataProvider()
+  {
+      $testArray = [
+        [
+          'task' => 'Project planing',
+          'type' => 'primary',
+          'START_DATE' => '2020-10-19',
+          'END_DATE' => '2020-11-07'
+        ],
+        [
+          'task' => 'Production',
+          'type' => 'danger',
+          'START_DATE' => '2020-11-15',
+          'END_DATE' => '2021-03-29'
+        ],
+        [
+          'task' => 'Release',
+          'type' => 'success',
+          'START_DATE' => '2021-04-05',
+          'END_DATE' => '2021-04-06'
+        ],
+      ];
+     return new ArrayDataProvider([
+          'allModels' => $testArray,
+          'pagination' => [
+              'pageSize' => 0,
+          ],
+        ]
+      );
+  }
+}
+```
+#### View:
 ```php
 use yii\grid\GridView;
 
@@ -41,7 +83,6 @@ echo GridView::widget([
     [
       'attribute' => 'gantChart'
       'class' => 'rottriges\ganttcolumn\GanttColumn',
-      // 'ganttOptions' => 'test',
       'ganttOptions' => [
         // start or endDateRange can either be a static date (Y-m-d)
         // or an offset in weeks to the current date (-2, 0, 5, ...)
@@ -51,6 +92,8 @@ echo GridView::widget([
         'dateRangeEnd' => 28,
         'startAttribute' => 'START_DATE',
         'endAttribute' => 'END_DATE',
+        // progressBarType [string | closure] possible values
+        // primary, info, warning or danger.
         'progressBarType' => function($model, $key, $index) {
           return $model['type'];
         }
