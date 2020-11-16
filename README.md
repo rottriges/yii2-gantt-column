@@ -4,7 +4,7 @@
 
 [![Latest Stable Version](https://poser.pugx.org/rottriges/yii2-gantt-column/v)](//packagist.org/packages/rottriges/yii2-gantt-column) [![Total Downloads](https://poser.pugx.org/rottriges/yii2-gantt-column/downloads)](//packagist.org/packages/rottriges/yii2-gantt-column) [![Latest Unstable Version](https://poser.pugx.org/rottriges/yii2-gantt-column/v/unstable)](//packagist.org/packages/rottriges/yii2-gantt-column) [![License](https://poser.pugx.org/rottriges/yii2-gantt-column/license)](//packagist.org/packages/rottriges/yii2-gantt-column)
 
-Gantt-Column widget for yii2 grid extends the data column. It could be used for project management or other planings. for Yii Framework 2.0. The widget incorporates with Bootstrap 3.x.
+Gantt-Column widget for *Yii Framework 2.0 grid* extends the data column. It could be used for project management or other planings. The widget incorporates with Bootstrap 3.x.
 
 ![ganttColumnScreenshot](assets/img/ganttColumn1.png)
 
