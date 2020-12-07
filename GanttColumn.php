@@ -176,8 +176,8 @@ class GanttColumn extends DataColumn
         } else {
             $options = $this->contentOptions;
         }
-        $this->width = ($this->unitSum * $this->unitSize + 17) . 'px';
-        Html::addCssStyle($options, "width:{$this->width};");
+        $this->width = ($this->unitSum * $this->unitSize + 20) . 'px';
+        Html::addCssStyle($options, "width:{$this->width} !important;");
 
         // return Html::tag('td', $this->progressBar, $options);
         return Html::tag('td', $this->renderDataCellContent($model, $key, $index), $options);
@@ -195,6 +195,8 @@ class GanttColumn extends DataColumn
 
         $this->_startDate = $this->getStartAttributeValue($model, $key, $index);
         $this->_endDate = $this->getEndAttributeValue($model, $key, $index);
+        $this->setStartAndEndDate();
+
         if (
           !empty($this->ganttOptions['progressBarType']) &&
           $this->ganttOptions['progressBarType'] instanceof Closure
@@ -211,8 +213,28 @@ class GanttColumn extends DataColumn
         return $this->grid->emptyCell;
     }
 
-    protected function setStartAndEndDate($model, $key, $index)
+    /**
+     * function checks wether start and end-date are date values or
+     * one of each is a date-value and the other is an integer.
+     *
+     * @return boolean
+     * @throws InvalidConfigException if there is not at least one date-value
+     * or if the other value is not an integer
+     */
+    protected function setStartAndEndDate()
     {
+      if( is_int($this->_startDate) && is_int($this->_endDate)){
+        throw new InvalidConfigException(
+          "One of the date values has to be a date value. Integer is given"
+        );
+      }
+      if (is_int($this->_startDate)){
+        $this->_startDate = $this->calculateDateFromDuration($this->_endDate, $this->_startDate);
+      }
+
+      if (is_int($this->_endDate)){
+        $this->_endDate = $this->calculateDateFromDuration($this->_startDate, $this->_endDate);
+      }
 
     }
 
@@ -313,8 +335,9 @@ class GanttColumn extends DataColumn
         // Check if value is _integer (can be negativ or pos)
         if(is_integer($rangeValue)){
           // + prefix for positiv numebers for additions
-          $val = sprintf("%+d",$rangeValue);
-          return date('Y-m-d', strtotime(date('Y-m-d') . $val .' weeks'));
+          // $val = sprintf("%+d",$rangeValue);
+          // return date('Y-m-d', strtotime(date('Y-m-d') . $val .' weeks'));
+          return $this->calculateDateFromDuration(date('Y-m-d'), $rangeValue);
         }
         // check if value is correct formated date
         if($this->validateGanttDate($rangeValue)){
@@ -327,10 +350,21 @@ class GanttColumn extends DataColumn
         );
     }
 
+    protected function calculateDateFromDuration($date, $duration)
+    {
+      // + prefix for positiv numebers for additions
+      $val = sprintf("%+d",$duration);
+      return date('Y-m-d', strtotime($date . $val .' weeks'));
+    }
+
     protected function getDateAttributeValue($model, $key, $index, $attribute)
     {
       if ( $attribute !== null && is_string($attribute) ) {
         $dateAttribute = ArrayHelper::getValue($model, $attribute);
+
+        // check if attribute is date or number (integer) for duration
+        if(is_int($dateAttribute)) return $dateAttribute;
+
         $dateValue = explode(' ', $dateAttribute)[0];
         if ( !$this->validateGanttDate($dateValue) ){
           throw new InvalidConfigException(
