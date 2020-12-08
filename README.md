@@ -97,6 +97,12 @@ echo GridView::widget([
         'progressBarType' => function($model, $key, $index) {
           return $model['type'];
         }
+        // progressBarColor [string | closure]
+        // css color property
+        // if color is set progressbar type will be overwritten
+        'progressBarType' => function($model, $key, $index) {
+          return $model['type'];
+        }
       ]
     ],
   ],

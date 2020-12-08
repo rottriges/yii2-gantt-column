@@ -18,6 +18,7 @@ class GanttProgressBar extends \yii\base\Component
   public $startGap = 0;
   public $length = 0;
   public $progressBarType = 'primary';
+  public $progressBarColor;
 
   public function getProgressBar()
   {
@@ -33,7 +34,7 @@ class GanttProgressBar extends \yii\base\Component
         'options' => ['class' => 'ro-progress' ],
         'barOptions' => [
           'class' => 'progress-bar-' . $this->progressBarType,
-          'style' => 'width:' . $this->length . 'px;'
+          'style' => 'width:' . $this->length . 'px; ' . $this->getProgressBarColor(),
         ]
     ]);
   }
@@ -54,14 +55,19 @@ class GanttProgressBar extends \yii\base\Component
             'percent' => 0,
             'options' => [
               'class' => 'progress-bar-' . $this->progressBarType,
-              'style' => 'width:' . $this->length . 'px;'
+              'style' => 'width:' . $this->length . 'px; ' . $this->getProgressBarColor(),
             ]
           ]
       ]
     ]);
   }
 
-
+  protected function getProgressBarColor()
+  {
+    if(isset($this->progressBarColor) && $this->progressBarColor !== ''){
+      return 'background-color:' . $this->progressBarColor . ';';
+    }
+  }
 
 
 
