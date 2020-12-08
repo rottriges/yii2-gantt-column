@@ -102,6 +102,11 @@ class GanttColumn extends DataColumn
     */
     private $_progressType;
 
+    /**
+    * progress color string|closure
+    */
+    private $_progressColor;
+
 
     public function init()
     {
@@ -124,7 +129,11 @@ class GanttColumn extends DataColumn
       }
 
       if (!isset($this->ganttOptions['progressBarType']) ) {
-        $this->ganttOptions['progressBarType'] = 'default';
+        $this->ganttOptions['progressBarType'] = 'primary';
+      }
+
+      if (!isset($this->ganttOptions['progressBarColor']) ) {
+        $this->ganttOptions['progressBarColor'] = '';
       }
 
       $this->_dateRangeStart = $this->getDateRange($this->ganttOptions['dateRangeStart']);
@@ -210,6 +219,15 @@ class GanttColumn extends DataColumn
           $this->_progressType = $this->ganttOptions['progressBarType'];
         }
 
+        if (
+          !empty($this->ganttOptions['progressBarColor']) &&
+          $this->ganttOptions['progressBarColor'] instanceof Closure
+        ) {
+            $this->_progressColor = call_user_func($this->ganttOptions['progressBarColor'], $model, $key, $index, $this);
+        } else {
+          $this->_progressColor = $this->ganttOptions['progressBarColor'];
+        }
+
         if ($this->_startDate !== null && $this->_endDate !== null && $this->checkIfDatesInRange()) {
           return $this->getProgressBar();
         }
@@ -233,11 +251,11 @@ class GanttColumn extends DataColumn
         );
       }
       if (is_int($this->_startDate)){
-        $this->_startDate = $this->calculateDateFromDuration($this->_endDate, $this->_startDate);
+        $this->_startDate = $this->calculateDateWithDuration($this->_endDate, $this->_startDate);
       }
 
       if (is_int($this->_endDate)){
-        $this->_endDate = $this->calculateDateFromDuration($this->_startDate, $this->_endDate);
+        $this->_endDate = $this->calculateDateWithDuration($this->_startDate, $this->_endDate);
       }
 
     }
@@ -283,7 +301,6 @@ class GanttColumn extends DataColumn
     }
 
 
-
     protected function getProgressBar()
     {
 
@@ -292,6 +309,7 @@ class GanttColumn extends DataColumn
             'startGap' => $this->startGap,
             'length' => $this->progressLength,
             'progressBarType' => $this->_progressType,
+            'progressBarColor' => $this->_progressColor,
         ]);
         return $progressBar->getProgressBar();
     }
@@ -341,7 +359,7 @@ class GanttColumn extends DataColumn
           // + prefix for positiv numebers for additions
           // $val = sprintf("%+d",$rangeValue);
           // return date('Y-m-d', strtotime(date('Y-m-d') . $val .' weeks'));
-          return $this->calculateDateFromDuration(date('Y-m-d'), $rangeValue);
+          return $this->calculateDateWithDuration(date('Y-m-d'), $rangeValue);
         }
         // check if value is correct formated date
         if($this->validateGanttDate($rangeValue)){
@@ -354,7 +372,7 @@ class GanttColumn extends DataColumn
         );
     }
 
-    protected function calculateDateFromDuration($date, $duration)
+    protected function calculateDateWithDuration($date, $duration)
     {
       // + prefix for positiv numebers for additions
       $val = sprintf("%+d",$duration);
