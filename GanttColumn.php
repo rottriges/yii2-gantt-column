@@ -121,9 +121,11 @@ class GanttColumn extends DataColumn
       if (!is_array($this->ganttOptions)) {
         throw new InvalidConfigException("`ganttOptions` is not an array");
       }
+
       if (!isset($this->ganttOptions['startAttribute']) || !isset($this->ganttOptions['endAttribute'])) {
         throw new InvalidConfigException("`startAttribute` and/or `endAttribute` not defined");
       }
+
       if (!isset($this->ganttOptions['dateRangeStart']) || !isset($this->ganttOptions['dateRangeStart'])) {
         throw new InvalidConfigException("`dateRangeStart` and/or `dateRangeStart` not defined");
       }
@@ -251,6 +253,8 @@ class GanttColumn extends DataColumn
         );
       }
       if (is_int($this->_startDate)){
+        //end-date and duration always needs a negativ number 
+        if ($this->_startDate > 0) $this->_startDate = $this->_startDate * -1;
         $this->_startDate = $this->calculateDateWithDuration($this->_endDate, $this->_startDate);
       }
 
@@ -342,13 +346,31 @@ class GanttColumn extends DataColumn
 
     protected function getStartAttributeValue($model, $key, $index)
     {
-        $attribute = $this->ganttOptions['startAttribute'];
+        $attribute = '';
+        if (
+          !empty($this->ganttOptions['startAttribute']) &&
+          $this->ganttOptions['startAttribute'] instanceof Closure
+        ) {
+            $attribute = call_user_func($this->ganttOptions['startAttribute'], $model, $key, $index, $this);
+        } else {
+          $attribute = $this->ganttOptions['startAttribute'];
+
+        }
         return $this->getDateAttributeValue($model, $key, $index, $attribute );
     }
 
     protected function getEndAttributeValue($model, $key, $index)
     {
-        $attribute = $this->ganttOptions['endAttribute'];
+        $attribute = '';
+        if (
+          !empty($this->ganttOptions['endAttribute']) &&
+          $this->ganttOptions['endAttribute'] instanceof Closure
+        ) {
+            $attribute = call_user_func($this->ganttOptions['endAttribute'], $model, $key, $index, $this);
+        } else {
+          $attribute = $this->ganttOptions['endAttribute'];
+
+        }
         return $this->getDateAttributeValue($model, $key, $index, $attribute );
     }
 
