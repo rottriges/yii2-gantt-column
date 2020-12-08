@@ -123,6 +123,10 @@ class GanttColumn extends DataColumn
         throw new InvalidConfigException("`dateRangeStart` and/or `dateRangeStart` not defined");
       }
 
+      if (!isset($this->ganttOptions['progressBarType']) ) {
+        $this->ganttOptions['progressBarType'] = 'default';
+      }
+
       $this->_dateRangeStart = $this->getDateRange($this->ganttOptions['dateRangeStart']);
       $this->_dateRangeEnd = $this->getDateRange($this->ganttOptions['dateRangeEnd']);
 
