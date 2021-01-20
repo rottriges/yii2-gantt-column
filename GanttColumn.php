@@ -253,7 +253,7 @@ class GanttColumn extends DataColumn
         );
       }
       if (is_int($this->_startDate)){
-        //end-date and duration always needs a negativ number 
+        //end-date and duration always needs a negativ number
         if ($this->_startDate > 0) $this->_startDate = $this->_startDate * -1;
         $this->_startDate = $this->calculateDateWithDuration($this->_endDate, $this->_startDate);
       }
@@ -396,8 +396,11 @@ class GanttColumn extends DataColumn
 
     protected function calculateDateWithDuration($date, $duration)
     {
-      // + prefix for positiv numebers for additions
+      // + prefix for positiv numebers for additions;
       $val = sprintf("%+d",$duration);
+      // The duration must be decimated by a factor of 1, as the current week
+      // is already included. For positive values -1 and for negative values +1
+      $val = ($val > 0) ? $val - 1 : $val + 1;
       return date('Y-m-d', strtotime($date . $val .' weeks'));
     }
 
