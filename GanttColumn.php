@@ -84,24 +84,6 @@ class GanttColumn extends DataColumn
     public $unitSum;
 
     /**
-     * startGap
-     *
-     * size of the gap (weeks * units) if the startDate is greater than the dateRangeStart
-     *
-     * @var int size of gap
-     */
-    private $_startGap;
-
-    /**
-     * progressLength
-     *
-     * size of the progress bar in weeks * units
-     *
-     * @var int size of gap
-     */
-    private $_progressLength;
-
-    /**
      * progress typ (primary, danger, success, warnin or info)
      */
     private $_progressType;
@@ -111,11 +93,16 @@ class GanttColumn extends DataColumn
      */
     private $_progressColor;
 
+    /**
+     * @var string
+     */
+    private $_tooltip;
+
 
     /**
      * @throws \yii\base\InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -235,6 +222,14 @@ class GanttColumn extends DataColumn
             $this->_progressColor = $this->ganttOptions['progressBarColor'];
         }
 
+        if (!empty($this->ganttOptions['tooltip']) &&
+            $this->ganttOptions['tooltip'] instanceof Closure
+        ) {
+            $this->_tooltip = call_user_func($this->ganttOptions['tooltip'], $model, $key, $index, $this);
+        } else {
+            $this->_tooltip = $this->ganttOptions['tooltip'];
+        }
+
         if ($this->_startDate !== null && $this->_endDate !== null && $this->checkIfDatesInRange()) {
             return $this->getProgressBar();
         }
@@ -283,7 +278,7 @@ class GanttColumn extends DataColumn
         if ($diff === 0) {
             return 1;
         }
-        return $this->_startGap = $diff * $this->unitSize;
+        return $_startGap = $diff * $this->unitSize;
     }
 
 
@@ -293,10 +288,10 @@ class GanttColumn extends DataColumn
         $end = $this->getProgressEnd();
         $diff = $this->_header->getDiff($end, $start) + 1;// +1 because the current week hast to be added
 
-        return $this->_progressLength = $diff * $this->unitSize;
+        return $_progressLength = $diff * $this->unitSize;
     }
 
-    protected function getProgressStart()
+    protected function getProgressStart(): string
     {
         if ($this->_startDate >= $this->_dateRangeStart) {
             return $this->_startDate;
@@ -313,6 +308,10 @@ class GanttColumn extends DataColumn
     }
 
 
+    /**
+     * @throws \yii\base\InvalidConfigException
+     * @throws \Exception
+     */
     protected function getProgressBar(): string
     {
 
@@ -322,6 +321,7 @@ class GanttColumn extends DataColumn
             'length' => $this->progressLength,
             'progressBarType' => $this->_progressType,
             'progressBarColor' => $this->_progressColor,
+            'tooltip' => $this->_tooltip
         ]);
         return $progressBar->getProgressBar();
     }
@@ -360,7 +360,6 @@ class GanttColumn extends DataColumn
             $attribute = call_user_func($this->ganttOptions['startAttribute'], $model, $key, $index, $this);
         } else {
             $attribute = $this->ganttOptions['startAttribute'];
-
         }
         return $this->getDateAttributeValue($model, $key, $index, $attribute);
     }
