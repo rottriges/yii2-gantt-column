@@ -450,11 +450,7 @@ class GanttColumn extends DataColumn
     protected function validateGanttDate($dateValue): bool
     {
         $date = DateTime::createFromFormat($this->ganttDateFormat, $dateValue);
-
-        if ($date == false || !(date_format($date, $this->ganttDateFormat) == $dateValue)) {
-            return false;
-        }
-        return true;
+        return !($date == false || !(date_format($date, $this->ganttDateFormat) === $dateValue));
     }
 
     /**
