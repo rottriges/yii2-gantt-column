@@ -56,7 +56,6 @@ class GanttColumnHeaderDay extends Component
             new DateInterval($interval),
             $endDate
         );
-
         $day = 0;
         $hour = 0;
         $hourIndex = 0;
@@ -64,11 +63,11 @@ class GanttColumnHeaderDay extends Component
             $d = $value->format('d');
             $h = $value->format('H');
             $minute = $value->format('i');
-            if ($day != $d) {
+            if ($day !== $d) {
                 $day = $d;
                 $this->days[$d] = 0;
             }
-            if ($hour != $h) {
+            if ($hour !== $h) {
                 $hour = $h;
                 $hourIndex = $day . '-' . $hour;
                 $this->hours[$hourIndex] = 0;
@@ -111,7 +110,7 @@ class GanttColumnHeaderDay extends Component
             $bgColor = $this->getColBgColor($i, $bgOdd, $bgEven);
             // explode 'YYYY-mm' to 'mm'
             $value = (int)explode('-', $dayHour)[1];
-            $value = GanttColumn::t('ganttColumn', $value);
+            $value = GanttColumn::t('ganttColumn', $value) . ':';
             $row .= $this->generateRow($units, $value, $bgColor);
             $i++;
         }
@@ -127,7 +126,8 @@ class GanttColumnHeaderDay extends Component
         $i = 0;
         foreach ($this->minutes as $minute) {
             $bgColor = $this->getColBgColor($i, $bgOdd, $bgEven);
-            $row .= $this->generateRow(1, $minute[0], $bgColor);
+            $minuteOutput = $minute[0] . '0';
+            $row .= $this->generateRow(1, $minuteOutput, $bgColor);
             $i++;
         }
         $row .= Html::tag('div', '', ['class' => 'last-header-col']);
