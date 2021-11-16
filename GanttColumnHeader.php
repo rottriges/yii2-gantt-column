@@ -92,11 +92,11 @@ class GanttColumnHeader extends Component
             $y = $value->format('Y');
             $m = $value->format('m');
             $w = $value->format('W');
-            if ($year != $y) {
+            if ($year !== $y) {
                 $year = $y;
                 $this->years[$y] = 0;
             }
-            if ($month != $m) {
+            if ($month !== $m) {
                 $month = $m;
                 $monthIndex = $year . '-' . $month;
                 $this->months[$monthIndex] = 0;
