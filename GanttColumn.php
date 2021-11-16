@@ -36,7 +36,7 @@ class GanttColumn extends DataColumn
     /**
      * @var array|Closure the configuration options for the gantt column.
      * If not set as an array, this can be passed as a callback function
-     *of the signature: `function ($model, $key, $index)`, where:
+     * of the signature: `function ($model, $key, $index)`, where:
      * - `$model`: _\yii\base\Model_, is the data model.
      * - `$key`: _string|object_, is the primary key value associated with the data model.
      * - `$index`: _integer_, is the zero-based index of the data model among the model array returned by [[dataProvider]].
@@ -46,6 +46,15 @@ class GanttColumn extends DataColumn
      */
     public $ganttOptions = [];
 
+    /*
+    * header class
+    *
+    * default  = year - month - week
+    *
+    * could be changed to day - hour - minute
+    * 'columnHeader' => \rottrigs\ganttcolumn\GanttColumnHeaderDay::class,
+    * ...
+     */
     public $columnHeader = GanttColumnHeader::class;
 
     /**
@@ -107,7 +116,6 @@ class GanttColumn extends DataColumn
         parent::init();
 
         self::registerTranslations();
-
         $this->_header = new $this->columnHeader;
         $this->_header->unitSize = $this->unitSize;
         self::registerTranslations();
@@ -130,6 +138,10 @@ class GanttColumn extends DataColumn
 
         if (!isset($this->ganttOptions['progressBarColor'])) {
             $this->ganttOptions['progressBarColor'] = '';
+        }
+
+        if (!isset($this->ganttOptions['tooltip'])) {
+            $this->ganttOptions['tooltip'] = '';
         }
 
         $this->_dateRangeStart = $this->getDateRange($this->ganttOptions['dateRangeStart']);
