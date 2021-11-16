@@ -12,11 +12,25 @@
   height: 14px;
 }
 
-.bg-week-od{
+.bg-week-od {
   background-color: #f3f3f3;
 }
 
 .bg-week-even{
+  background-color: #fff;
+}
+
+.minute{
+  font-weight: normal;
+  font-size: 10px;
+  height: 14px;
+}
+
+.bg-minute-od {
+  background-color: #f3f3f3;
+}
+
+.bg-minute-even{
   background-color: #fff;
 }
 
