@@ -52,7 +52,7 @@ class GanttColumn extends DataColumn
     * default  = year - month - week
     *
     * could be changed to day - hour - minute
-    * 'columnHeader' => \rottrigs\ganttcolumn\GanttColumnHeaderDay::class,
+    * 'columnHeader' => \rottriges\ganttcolumn\GanttColumnHeaderDay::class,
     * ...
      */
     public $columnHeader = GanttColumnHeader::class;
