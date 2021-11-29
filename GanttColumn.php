@@ -102,6 +102,11 @@ class GanttColumn extends DataColumn
     */
     private $_progressType;
 
+    /**
+    * progress color string|closure
+    */
+    private $_progressColor;
+
 
     public function init()
     {
@@ -116,11 +121,21 @@ class GanttColumn extends DataColumn
       if (!is_array($this->ganttOptions)) {
         throw new InvalidConfigException("`ganttOptions` is not an array");
       }
+
       if (!isset($this->ganttOptions['startAttribute']) || !isset($this->ganttOptions['endAttribute'])) {
         throw new InvalidConfigException("`startAttribute` and/or `endAttribute` not defined");
       }
+
       if (!isset($this->ganttOptions['dateRangeStart']) || !isset($this->ganttOptions['dateRangeStart'])) {
         throw new InvalidConfigException("`dateRangeStart` and/or `dateRangeStart` not defined");
+      }
+
+      if (!isset($this->ganttOptions['progressBarType']) ) {
+        $this->ganttOptions['progressBarType'] = 'primary';
+      }
+
+      if (!isset($this->ganttOptions['progressBarColor']) ) {
+        $this->ganttOptions['progressBarColor'] = '';
       }
 
       $this->_dateRangeStart = $this->getDateRange($this->ganttOptions['dateRangeStart']);
@@ -176,8 +191,8 @@ class GanttColumn extends DataColumn
         } else {
             $options = $this->contentOptions;
         }
-        $this->width = ($this->unitSum * $this->unitSize + 17) . 'px';
-        Html::addCssStyle($options, "width:{$this->width};");
+        $this->width = ($this->unitSum * $this->unitSize + 20) . 'px';
+        Html::addCssStyle($options, "width:{$this->width} !important;");
 
         // return Html::tag('td', $this->progressBar, $options);
         return Html::tag('td', $this->renderDataCellContent($model, $key, $index), $options);
@@ -195,6 +210,8 @@ class GanttColumn extends DataColumn
 
         $this->_startDate = $this->getStartAttributeValue($model, $key, $index);
         $this->_endDate = $this->getEndAttributeValue($model, $key, $index);
+        $this->setStartAndEndDate();
+
         if (
           !empty($this->ganttOptions['progressBarType']) &&
           $this->ganttOptions['progressBarType'] instanceof Closure
@@ -204,6 +221,15 @@ class GanttColumn extends DataColumn
           $this->_progressType = $this->ganttOptions['progressBarType'];
         }
 
+        if (
+          !empty($this->ganttOptions['progressBarColor']) &&
+          $this->ganttOptions['progressBarColor'] instanceof Closure
+        ) {
+            $this->_progressColor = call_user_func($this->ganttOptions['progressBarColor'], $model, $key, $index, $this);
+        } else {
+          $this->_progressColor = $this->ganttOptions['progressBarColor'];
+        }
+
         if ($this->_startDate !== null && $this->_endDate !== null && $this->checkIfDatesInRange()) {
           return $this->getProgressBar();
         }
@@ -211,8 +237,30 @@ class GanttColumn extends DataColumn
         return $this->grid->emptyCell;
     }
 
-    protected function setStartAndEndDate($model, $key, $index)
+    /**
+     * function checks wether start and end-date are date values or
+     * one of each is a date-value and the other is an integer.
+     *
+     * @return boolean
+     * @throws InvalidConfigException if there is not at least one date-value
+     * or if the other value is not an integer
+     */
+    protected function setStartAndEndDate()
     {
+      if( is_int($this->_startDate) && is_int($this->_endDate)){
+        throw new InvalidConfigException(
+          "One of the date values has to be a date value. Integer is given"
+        );
+      }
+      if (is_int($this->_startDate)){
+        //end-date and duration always needs a negativ number
+        if ($this->_startDate > 0) $this->_startDate = $this->_startDate * -1;
+        $this->_startDate = $this->calculateDateWithDuration($this->_endDate, $this->_startDate);
+      }
+
+      if (is_int($this->_endDate)){
+        $this->_endDate = $this->calculateDateWithDuration($this->_startDate, $this->_endDate);
+      }
 
     }
 
@@ -257,7 +305,6 @@ class GanttColumn extends DataColumn
     }
 
 
-
     protected function getProgressBar()
     {
 
@@ -266,6 +313,7 @@ class GanttColumn extends DataColumn
             'startGap' => $this->startGap,
             'length' => $this->progressLength,
             'progressBarType' => $this->_progressType,
+            'progressBarColor' => $this->_progressColor,
         ]);
         return $progressBar->getProgressBar();
     }
@@ -298,13 +346,31 @@ class GanttColumn extends DataColumn
 
     protected function getStartAttributeValue($model, $key, $index)
     {
-        $attribute = $this->ganttOptions['startAttribute'];
+        $attribute = '';
+        if (
+          !empty($this->ganttOptions['startAttribute']) &&
+          $this->ganttOptions['startAttribute'] instanceof Closure
+        ) {
+            $attribute = call_user_func($this->ganttOptions['startAttribute'], $model, $key, $index, $this);
+        } else {
+          $attribute = $this->ganttOptions['startAttribute'];
+
+        }
         return $this->getDateAttributeValue($model, $key, $index, $attribute );
     }
 
     protected function getEndAttributeValue($model, $key, $index)
     {
-        $attribute = $this->ganttOptions['endAttribute'];
+        $attribute = '';
+        if (
+          !empty($this->ganttOptions['endAttribute']) &&
+          $this->ganttOptions['endAttribute'] instanceof Closure
+        ) {
+            $attribute = call_user_func($this->ganttOptions['endAttribute'], $model, $key, $index, $this);
+        } else {
+          $attribute = $this->ganttOptions['endAttribute'];
+
+        }
         return $this->getDateAttributeValue($model, $key, $index, $attribute );
     }
 
@@ -313,8 +379,9 @@ class GanttColumn extends DataColumn
         // Check if value is _integer (can be negativ or pos)
         if(is_integer($rangeValue)){
           // + prefix for positiv numebers for additions
-          $val = sprintf("%+d",$rangeValue);
-          return date('Y-m-d', strtotime(date('Y-m-d') . $val .' weeks'));
+          // $val = sprintf("%+d",$rangeValue);
+          // return date('Y-m-d', strtotime(date('Y-m-d') . $val .' weeks'));
+          return $this->calculateDateWithDuration(date('Y-m-d'), $rangeValue);
         }
         // check if value is correct formated date
         if($this->validateGanttDate($rangeValue)){
@@ -327,10 +394,24 @@ class GanttColumn extends DataColumn
         );
     }
 
+    protected function calculateDateWithDuration($date, $duration)
+    {
+      // + prefix for positiv numebers for additions;
+      $val = sprintf("%+d",$duration);
+      // The duration must be decimated by a factor of 1, as the current week
+      // is already included. For positive values -1 and for negative values +1
+      $val = ($val > 0) ? $val - 1 : $val + 1;
+      return date('Y-m-d', strtotime($date . $val .' weeks'));
+    }
+
     protected function getDateAttributeValue($model, $key, $index, $attribute)
     {
       if ( $attribute !== null && is_string($attribute) ) {
         $dateAttribute = ArrayHelper::getValue($model, $attribute);
+
+        // check if attribute is date or number (integer) for duration
+        if(is_int($dateAttribute)) return $dateAttribute;
+
         $dateValue = explode(' ', $dateAttribute)[0];
         if ( !$this->validateGanttDate($dateValue) ){
           throw new InvalidConfigException(
